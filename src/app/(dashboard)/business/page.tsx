@@ -13,7 +13,7 @@ const STATUSES = ['Active', 'Expired', 'Revoked', 'Pending']
 const emptyForm = { business_name: '', owner_name: '', owner_resident_id: '', business_type: '', address: '', permit_date: '', expiry_date: '', status: 'Active' }
 
 export default function BusinessPage() {
-  const { user } = useAuth()
+  const { user, canDo } = useAuth()
   const [permits, setPermits] = useState<BusinessPermit[]>([])
   const [residents, setResidents] = useState<Resident[]>([])
   const [search, setSearch] = useState('')
@@ -101,9 +101,11 @@ export default function BusinessPage() {
               <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>Business Permits</h1>
               <p style={{ margin: 0, fontSize: '0.875rem', color: '#fef3c7' }}>Registered business permits</p>
             </div>
-            <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-              <Plus size={15} /> Add Permit
-            </button>
+            {canDo('business', 'can_add') && (
+              <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
+                <Plus size={15} /> Add Permit
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
             {[{ label: `${permits.length} total` }, { label: `${activeCount} active` }, { label: `${expiredCount} expired` }].map(b => (
@@ -148,8 +150,8 @@ export default function BusinessPage() {
                   <td className="table-cell">
                     <div className="flex items-center gap-2">
                       <button onClick={() => window.open(`/business/print?id=${p.id}`, '_blank')} className="rounded p-1 hover:bg-slate-100 text-slate-500 hover:text-amber-600 transition-colors"><Printer size={15} /></button>
-                      <button onClick={() => openEdit(p)} className="rounded p-1 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors"><Pencil size={15} /></button>
-                      <button onClick={() => handleDelete(p.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
+                      {canDo('business', 'can_update') && <button onClick={() => openEdit(p)} className="rounded p-1 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors"><Pencil size={15} /></button>}
+                      {canDo('business', 'can_delete') && <button onClick={() => handleDelete(p.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>}
                     </div>
                   </td>
                 </tr>

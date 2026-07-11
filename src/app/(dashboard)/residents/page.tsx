@@ -22,7 +22,7 @@ const empty: Omit<Resident, 'id' | 'created_at' | 'updated_at'> = {
 }
 
 export default function ResidentsPage() {
-  const { user } = useAuth()
+  const { user, canDo } = useAuth()
   const [residents, setResidents] = useState<Resident[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -107,9 +107,11 @@ export default function ResidentsPage() {
               <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>Residents</h1>
               <p style={{ margin: 0, fontSize: '0.875rem', color: '#c7d2fe' }}>Registered barangay residents</p>
             </div>
-            <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-              <Plus size={15} /> Add Resident
-            </button>
+            {canDo('residents', 'can_add') && (
+              <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
+                <Plus size={15} /> Add Resident
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
             {[{ label: `${residents.length} total`, icon: '👥' }, { label: `${permanent} permanent`, icon: '🏠' }, { label: `${transient} transient`, icon: '🚶' }].map(b => (
@@ -163,12 +165,8 @@ export default function ResidentsPage() {
                   </td>
                   <td className="table-cell">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => openEdit(r)} className="rounded p-1 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors">
-                        <Pencil size={15} />
-                      </button>
-                      <button onClick={() => handleDelete(r.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors">
-                        <Trash2 size={15} />
-                      </button>
+                      {canDo('residents', 'can_update') && <button onClick={() => openEdit(r)} className="rounded p-1 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors"><Pencil size={15} /></button>}
+                      {canDo('residents', 'can_delete') && <button onClick={() => handleDelete(r.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>}
                     </div>
                   </td>
                 </tr>

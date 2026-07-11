@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext'
 import { auditLog } from '@/lib/audit'
 
 export default function CertificatesPage() {
-  const { user } = useAuth()
+  const { user, canDo } = useAuth()
   const [issuances, setIssuances] = useState<CertificateIssuance[]>([])
   const [certTypes, setCertTypes] = useState<CertificateType[]>([])
   const [residents, setResidents] = useState<Resident[]>([])
@@ -86,9 +86,11 @@ export default function CertificatesPage() {
               <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>Certificates</h1>
               <p style={{ margin: 0, fontSize: '0.875rem', color: '#a7f3d0' }}>Certificate issuance records</p>
             </div>
-            <button onClick={() => { setForm({ resident_id: '', certificate_type_id: '', purpose: '', cedula_number: '', or_number: '', signed_by_name: captainName, signed_by_position: captainPosition }); setModalOpen(true) }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-              <Plus size={15} /> Issue Certificate
-            </button>
+            {canDo('certificates', 'can_add') && (
+              <button onClick={() => { setForm({ resident_id: '', certificate_type_id: '', purpose: '', cedula_number: '', or_number: '', signed_by_name: captainName, signed_by_position: captainPosition }); setModalOpen(true) }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
+                <Plus size={15} /> Issue Certificate
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '2rem', padding: '0.375rem 0.875rem', fontSize: '0.8rem' }}>
@@ -129,7 +131,7 @@ export default function CertificatesPage() {
                   <td className="table-cell">
                     <div className="flex items-center gap-2">
                       <button onClick={() => window.open(`/certificates/print?id=${i.id}`, '_blank')} className="rounded p-1 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors"><Printer size={15} /></button>
-                      <button onClick={() => handleDelete(i.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
+                      {canDo('certificates', 'can_delete') && <button onClick={() => handleDelete(i.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>}
                     </div>
                   </td>
                 </tr>
@@ -152,7 +154,7 @@ export default function CertificatesPage() {
             <label className="label">Certificate Type *</label>
             <select className="input" value={form.certificate_type_id} onChange={e => set('certificate_type_id', e.target.value)}>
               <option value="">Select type</option>
-              {certTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {certTypes.map(t => <option key={t.id} value={t.id}>{t.name}{t.price > 0 ? ` — ₱${Number(t.price).toFixed(2)}` : ' — Free'}</option>)}
             </select>
           </div>
           <div className="sm:col-span-2">

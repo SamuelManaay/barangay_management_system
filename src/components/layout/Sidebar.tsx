@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, FileText, Scale, Briefcase,
-  UserCheck, Building2, LogOut, Menu, X, Settings, ShieldCheck, UsersRound, ClipboardList
+  UserCheck, Building2, LogOut, Menu, X, Settings, ShieldCheck, UsersRound, ClipboardList, Banknote, Star, CalendarDays, FolderKanban, Wallet, GraduationCap,
+  AlertTriangle, Siren, Tent, Package, HardHat, Shield, MapPin, Zap
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
@@ -20,6 +21,28 @@ const navItems: { href: string; label: string; icon: React.ElementType; module: 
   { href: '/settlements',     label: 'Settlements',     icon: Briefcase,       module: 'settlements' },
   { href: '/officials',       label: 'Officials',       icon: UserCheck,       module: 'officials' },
   { href: '/business',        label: 'Business Permits',icon: Building2,       module: 'business' },
+]
+
+const skNavItems: { href: string; label: string; icon: React.ElementType; module: ModuleKey }[] = [
+  { href: '/sk',              label: 'SK Dashboard',      icon: LayoutDashboard, module: 'sk_dashboard' },
+  { href: '/sk/officials',    label: 'Officials',         icon: Star,            module: 'sk_officials' },
+  { href: '/sk/youth',        label: 'Youth Registry',    icon: Users,           module: 'sk_youth' },
+  { href: '/sk/events',       label: 'Programs & Events', icon: CalendarDays,    module: 'sk_events' },
+  { href: '/sk/projects',     label: 'Projects',          icon: FolderKanban,    module: 'sk_projects' },
+  { href: '/sk/finances',     label: 'Finances',          icon: Wallet,          module: 'sk_finance' },
+  { href: '/sk/scholarships', label: 'Scholarships',      icon: GraduationCap,   module: 'sk_scholarships' },
+]
+
+const calamityNavItems: { href: string; label: string; icon: React.ElementType; module: ModuleKey }[] = [
+  { href: '/calamity',           label: 'Dashboard',          icon: LayoutDashboard, module: 'cal_dashboard' },
+  { href: '/calamity/incidents', label: 'Incidents',          icon: AlertTriangle,   module: 'cal_incidents' },
+  { href: '/calamity/requests',  label: 'Emergency Requests', icon: Siren,           module: 'cal_requests' },
+  { href: '/calamity/centers',   label: 'Evacuation Centers', icon: Tent,            module: 'cal_centers' },
+  { href: '/calamity/relief',    label: 'Relief Distribution',icon: Package,         module: 'cal_relief' },
+  { href: '/calamity/damage',    label: 'Damage Assessment',  icon: HardHat,         module: 'cal_damage' },
+  { href: '/calamity/tanods',    label: 'Tanod Response',     icon: Shield,          module: 'cal_tanods' },
+  { href: '/calamity/patrol',    label: 'Patrol Logs',        icon: MapPin,          module: 'cal_patrol' },
+  { href: '/calamity/electricity', label: 'Electricity Issues', icon: Zap,           module: 'cal_electricity' },
 ]
 
 const roleStyle: Record<string, { bg: string; color: string }> = {
@@ -77,15 +100,50 @@ export default function Sidebar() {
             )
           })}
 
+          {/* Calamity section */}
+          {(user?.role === 'Admin' || calamityNavItems.some(i => hasModule(i.module))) && (
+            <>
+              <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(252,165,165,0.7)', padding: '0.75rem 0.75rem 0.25rem', margin: 0 }}>Calamity & Emergency</p>
+              {calamityNavItems.filter(i => user?.role === 'Admin' || hasModule(i.module)).map(({ href, label, icon: Icon }) => {
+                const active = pathname === href || (href !== '/calamity' && pathname.startsWith(href))
+                return (
+                  <Link key={href} href={href} onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '0.625rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', fontWeight: active ? 600 : 400, textDecoration: 'none', transition: 'all 0.15s', background: active ? 'linear-gradient(135deg,rgba(220,38,38,0.4),rgba(185,28,28,0.25))' : 'transparent', color: active ? '#fff' : 'rgba(203,213,225,0.85)', boxShadow: active ? '0 2px 8px rgba(220,38,38,0.25)' : 'none', border: active ? '1px solid rgba(252,165,165,0.2)' : '1px solid transparent' }}>
+                    <Icon size={17} style={{ opacity: active ? 1 : 0.7 }} />
+                    {label}
+                    {active && <div style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#fca5a5' }} />}
+                  </Link>
+                )
+              })}
+            </>
+          )}
+
+          {/* SK section */}
+          {(user?.role === 'Admin' || skNavItems.some(i => hasModule(i.module))) && (
+            <>
+              <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(52,211,153,0.6)', padding: '0.75rem 0.75rem 0.25rem', margin: 0 }}>Sangguniang Kabataan</p>
+              {skNavItems.filter(i => user?.role === 'Admin' || hasModule(i.module)).map(({ href, label, icon: Icon }) => {
+                const active = pathname === href || (href !== '/sk' && pathname.startsWith(href))
+                return (
+                  <Link key={href} href={href} onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '0.625rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', fontWeight: active ? 600 : 400, textDecoration: 'none', transition: 'all 0.15s', background: active ? 'linear-gradient(135deg,rgba(16,185,129,0.4),rgba(5,150,105,0.25))' : 'transparent', color: active ? '#fff' : 'rgba(203,213,225,0.85)', boxShadow: active ? '0 2px 8px rgba(16,185,129,0.25)' : 'none', border: active ? '1px solid rgba(52,211,153,0.2)' : '1px solid transparent' }}>
+                    <Icon size={17} style={{ opacity: active ? 1 : 0.7 }} />
+                    {label}
+                    {active && <div style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }} />}
+                  </Link>
+                )
+              })}
+            </>
+          )}
+
           {/* Admin section */}
-          {can('view:admin') && (
+          {(can('view:admin') || hasModule('audit_logs') || hasModule('cert_liquidation')) && (
             <>
               <p style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(165,180,252,0.5)', padding: '0.75rem 0.75rem 0.25rem', margin: 0 }}>Administration</p>
               {[
-                { href: '/admin/settings', label: 'Brgy. Settings',  icon: Settings },
-                { href: '/admin/users',    label: 'User Management', icon: ShieldCheck },
-                { href: '/admin/logs',     label: 'Audit Logs',      icon: ClipboardList },
-              ].map(({ href, label, icon: Icon }) => {
+                { href: '/admin/settings',           label: 'Brgy. Settings',      icon: Settings,     show: can('view:admin') },
+                { href: '/admin/users',              label: 'User Management',     icon: ShieldCheck,  show: can('view:admin') },
+                { href: '/admin/logs',               label: 'Audit Logs',          icon: ClipboardList,show: can('view:admin') || hasModule('audit_logs') },
+                { href: '/certificates/liquidation', label: 'Cert. Liquidation',   icon: Banknote,     show: can('view:admin') || hasModule('cert_liquidation') },
+              ].filter(i => i.show).map(({ href, label, icon: Icon }) => {
                 const active = pathname === href
                 return (
                   <Link key={href} href={href} onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderRadius: '0.625rem', padding: '0.625rem 0.75rem', fontSize: '0.875rem', fontWeight: active ? 600 : 400, textDecoration: 'none', transition: 'all 0.15s', background: active ? 'linear-gradient(135deg,rgba(99,102,241,0.5),rgba(139,92,246,0.3))' : 'transparent', color: active ? '#fff' : 'rgba(203,213,225,0.85)', border: active ? '1px solid rgba(165,180,252,0.2)' : '1px solid transparent' }}>

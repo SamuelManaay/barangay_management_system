@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
-import { Upload, Save } from 'lucide-react'
+import { Upload, Save, Plus, Trash2, Pencil, Check, X } from 'lucide-react'
+import type { CertificateType } from '@/types'
 
 type Settings = {
   id: string
@@ -105,6 +106,44 @@ export default function SettingsPage() {
   }
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  // ── Certificate List ──────────────────────────────────────────
+  const [certTypes, setCertTypes] = useState<CertificateType[]>([])
+  const [certLoading, setCertLoading] = useState(true)
+  const [newCert, setNewCert] = useState({ name: '', price: '' })
+  const [addingCert, setAddingCert] = useState(false)
+  const [editingCert, setEditingCert] = useState<{ id: string; name: string; price: string } | null>(null)
+
+  useEffect(() => { fetchCertTypes() }, [])
+
+  async function fetchCertTypes() {
+    setCertLoading(true)
+    const { data } = await supabase.from('certificate_types').select('*').order('name')
+    setCertTypes(data ?? [])
+    setCertLoading(false)
+  }
+
+  async function handleAddCert() {
+    if (!newCert.name.trim()) return
+    setAddingCert(true)
+    await supabase.from('certificate_types').insert({ name: newCert.name.trim(), price: parseFloat(newCert.price) || 0, has_restriction: false })
+    setNewCert({ name: '', price: '' })
+    setAddingCert(false)
+    fetchCertTypes()
+  }
+
+  async function handleUpdateCert() {
+    if (!editingCert) return
+    await supabase.from('certificate_types').update({ name: editingCert.name, price: parseFloat(editingCert.price) || 0 }).eq('id', editingCert.id)
+    setEditingCert(null)
+    fetchCertTypes()
+  }
+
+  async function handleDeleteCert(id: string) {
+    if (!confirm('Delete this certificate type?')) return
+    await supabase.from('certificate_types').delete().eq('id', id)
+    fetchCertTypes()
+  }
 
   if (loading) return <div style={{ padding: '2rem', color: '#64748b' }}>Loading settings...</div>
 
@@ -226,6 +265,69 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Certificate List */}
+        <div>
+          <h2 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e293b', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>Certificate List</h2>
+          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '1rem' }}>Manage certificate types and their prices used in the Certificates dashboard.</p>
+
+          {certLoading ? (
+            <p style={{ fontSize: '0.875rem', color: '#94a3b8' }}>Loading...</p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Certificate Type</th>
+                  <th style={{ textAlign: 'right', padding: '0.5rem 0.75rem', color: '#64748b', fontWeight: 600, borderBottom: '1px solid #e2e8f0', width: '8rem' }}>Price (₱)</th>
+                  <th style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid #e2e8f0', width: '5rem' }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {certTypes.map(ct => (
+                  <tr key={ct.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '0.5rem 0.75rem' }}>
+                      {editingCert?.id === ct.id ? (
+                        <input className="input" style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }} value={editingCert.name} onChange={e => setEditingCert(ec => ec ? { ...ec, name: e.target.value } : ec)} />
+                      ) : ct.name}
+                    </td>
+                    <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}>
+                      {editingCert?.id === ct.id ? (
+                        <input className="input" type="number" min="0" step="0.01" style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem', textAlign: 'right' }} value={editingCert.price} onChange={e => setEditingCert(ec => ec ? { ...ec, price: e.target.value } : ec)} />
+                      ) : `₱${Number(ct.price).toFixed(2)}`}
+                    </td>
+                    <td style={{ padding: '0.5rem 0.75rem' }}>
+                      {can('manage:admin') && (
+                        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                          {editingCert?.id === ct.id ? (
+                            <>
+                              <button onClick={handleUpdateCert} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#059669', padding: '0.25rem' }}><Check size={14} /></button>
+                              <button onClick={() => setEditingCert(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '0.25rem' }}><X size={14} /></button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => setEditingCert({ id: ct.id, name: ct.name, price: String(ct.price) })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', padding: '0.25rem' }}><Pencil size={14} /></button>
+                              <button onClick={() => handleDeleteCert(ct.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '0.25rem' }}><Trash2 size={14} /></button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {can('manage:admin') && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', alignItems: 'center' }}>
+              <input className="input" placeholder="Certificate name" value={newCert.name} onChange={e => setNewCert(n => ({ ...n, name: e.target.value }))} style={{ flex: 1 }} />
+              <input className="input" type="number" min="0" step="0.01" placeholder="Price" value={newCert.price} onChange={e => setNewCert(n => ({ ...n, price: e.target.value }))} style={{ width: '8rem' }} />
+              <button className="btn-primary" onClick={handleAddCert} disabled={addingCert || !newCert.name.trim()} style={{ whiteSpace: 'nowrap' }}>
+                <Plus size={14} /> Add
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Save */}

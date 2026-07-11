@@ -22,7 +22,7 @@ type Resident = { id: string; first_name: string; last_name: string; primary_con
 const emptyForm = { full_name: '', position: '', contact: '', email: '', status: 'Active' }
 
 export default function StaffDashboardPage() {
-  const { can, user } = useAuth()
+  const { can, canDo, user } = useAuth()
   const [staff, setStaff] = useState<Staff[]>([])
   const [residents, setResidents] = useState<Resident[]>([])
   const [loading, setLoading] = useState(true)
@@ -111,7 +111,7 @@ export default function StaffDashboardPage() {
               <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>Staff Directory</h1>
               <p style={{ margin: 0, fontSize: '0.875rem', color: '#a7f3d0' }}>All barangay staff employees</p>
             </div>
-            {can('manage:admin') && (
+            {(can('manage:admin') || canDo('staff', 'can_add')) && (
               <button onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
                 <Plus size={15} /> Add Staff
               </button>
@@ -137,7 +137,7 @@ export default function StaffDashboardPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ backgroundColor: '#fafafa' }}>
-                {['Name', 'Position', 'Contact', 'Email', 'Status', 'Date Added', ...(can('manage:admin') ? [''] : [])].map((h, i) => (
+                {['Name', 'Position', 'Contact', 'Email', 'Status', 'Date Added', ...((can('manage:admin') || canDo('staff', 'can_update')) ? [''] : [])].map((h, i) => (
                   <th key={i} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -169,7 +169,7 @@ export default function StaffDashboardPage() {
                   <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: '#64748b', whiteSpace: 'nowrap' }}>
                     {new Date(s.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
-                  {can('manage:admin') && (
+                  {(can('manage:admin') || canDo('staff', 'can_update')) && (
                     <td style={{ padding: '0.875rem 1rem' }}>
                       <button onClick={() => openEdit(s)} style={{ padding: '0.3rem', borderRadius: '0.375rem', border: 'none', backgroundColor: '#f1f5f9', cursor: 'pointer', color: '#475569', display: 'flex' }} title="Edit">
                         <Pencil size={14} />

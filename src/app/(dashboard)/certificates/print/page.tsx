@@ -7,6 +7,7 @@ import { Suspense } from 'react'
 
 type IssuanceData = {
   id: string
+  certificate_type_id: string
   purpose: string | null
   cedula_number: string | null
   or_number: string | null
@@ -25,6 +26,7 @@ type IssuanceData = {
   } | null
   certificate_types: {
     name: string
+    price: number
   } | null
 }
 
@@ -38,7 +40,7 @@ function CertificatePrint() {
   useEffect(() => {
     if (!id) return
     Promise.all([
-      supabase.from('certificate_issuances').select('*, residents(first_name, middle_name, last_name, birth_date, birth_place, purok, civil_status, gender), certificate_types(name)').eq('id', id).single(),
+      supabase.from('certificate_issuances').select('*, residents(first_name, middle_name, last_name, birth_date, birth_place, purok, civil_status, gender), certificate_types(name, price)').eq('id', id).single(),
       supabase.from('barangay_settings').select('barangay_name, municipality, province, captain_name, captain_position, logo_url, seal_url').limit(1).single(),
     ]).then(([cert, sett]) => {
       setData(cert.data as IssuanceData | null)
@@ -49,6 +51,13 @@ function CertificatePrint() {
 
   useEffect(() => {
     if (!loading && data) {
+      // Log print for liquidation
+      supabase.from('certificate_print_logs').insert({
+        certificate_issuance_id: data.id,
+        certificate_type_id: data.certificate_type_id,
+        certificate_type_name: data.certificate_types?.name ?? '',
+        price: data.certificate_types?.price ?? 0,
+      })
       setTimeout(() => window.print(), 300)
     }
   }, [loading, data])

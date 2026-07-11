@@ -1,0 +1,4 @@
+ALTER TABLE cal_requests
+  ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS sos_type text; -- Police | Fire | Medical

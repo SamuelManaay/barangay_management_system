@@ -12,7 +12,7 @@ import { auditLog } from '@/lib/audit'
 const SUMMON_STATUSES = ['Scheduled', 'Completed', 'Cancelled', 'Rescheduled']
 
 export default function SettlementsPage() {
-  const { user } = useAuth()
+  const { user, canDo } = useAuth()
   const [summons, setSummons] = useState<(SummonSchedule & { blotter_records?: BlotterRecord })[]>([])
   const [blotters, setBlotters] = useState<Pick<BlotterRecord, 'id' | 'incident_type' | 'incident_location'>[]>([])
   const [search, setSearch] = useState('')
@@ -102,9 +102,11 @@ export default function SettlementsPage() {
               <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>Settlements & Summons</h1>
               <p style={{ margin: 0, fontSize: '0.875rem', color: '#ede9fe' }}>Summon schedules and settlement reports</p>
             </div>
-            <button onClick={() => { setSummonForm({ blotter_id: '', summon_date: '', summon_time: '', status: 'Scheduled' }); setSummonModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-              <Plus size={15} /> Schedule Summon
-            </button>
+            {canDo('settlements', 'can_add') && (
+              <button onClick={() => { setSummonForm({ blotter_id: '', summon_date: '', summon_time: '', status: 'Scheduled' }); setSummonModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
+                <Plus size={15} /> Schedule Summon
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
             {[{ label: `${summons.length} total` }, { label: `${scheduled} scheduled` }, { label: `${completed} completed` }].map(b => (
@@ -144,15 +146,14 @@ export default function SettlementsPage() {
                   <td className="table-cell"><span className={statusClass[s.status] ?? 'badge-gray'}>{s.status}</span></td>
                   <td className="table-cell">
                     <div className="flex items-center gap-2">
-                      <select
-                        value={s.status}
-                        onChange={e => handleUpdateStatus(s.id, e.target.value)}
-                        style={{ fontSize: '0.78rem', padding: '0.25rem 0.5rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', backgroundColor: '#fafafa', cursor: 'pointer', color: '#374151' }}
-                      >
-                        {SUMMON_STATUSES.map(st => <option key={st}>{st}</option>)}
-                      </select>
+                      {canDo('settlements', 'can_update') && (
+                        <select value={s.status} onChange={e => handleUpdateStatus(s.id, e.target.value)}
+                          style={{ fontSize: '0.78rem', padding: '0.25rem 0.5rem', borderRadius: '0.375rem', border: '1px solid #e2e8f0', backgroundColor: '#fafafa', cursor: 'pointer', color: '#374151' }}>
+                          {SUMMON_STATUSES.map(st => <option key={st}>{st}</option>)}
+                        </select>
+                      )}
                       <button onClick={() => openSettlements(s)} className="rounded p-1 hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition-colors"><Eye size={15} /></button>
-                      <button onClick={() => handleDeleteSummon(s.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
+                      {canDo('settlements', 'can_delete') && <button onClick={() => handleDeleteSummon(s.id)} className="rounded p-1 hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>}
                     </div>
                   </td>
                 </tr>
